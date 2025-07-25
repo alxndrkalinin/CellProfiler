@@ -28,7 +28,7 @@ See also **Crop**.
 import logging
 
 import numpy
-import skimage.transform
+from cubic.skimage import transform, util
 from cellprofiler_core.image import Image
 from cellprofiler_core.module import ImageProcessing
 from cellprofiler_core.setting import Divider, HiddenCount, SettingsGroup, Binary
@@ -388,30 +388,30 @@ resized with the same settings as the first image.""",
             output_pixels = numpy.zeros(new_shape.astype(int), dtype=image_pixels.dtype)
 
             for idx in range(int(new_shape[-1])):
-                output_pixels[:, :, :, idx] = skimage.transform.resize(
+                output_pixels[:, :, :, idx] = transform.resize(
                     image_pixels[:, :, :, idx],
                     new_shape[:-1],
                     order=order,
                     mode="symmetric",
                 )
         else:
-            output_pixels = skimage.transform.resize(
+            output_pixels = transform.resize(
                 image_pixels, new_shape, order=order, mode="symmetric"
             )
 
         if image.multichannel and len(new_shape) > image.dimensions:
             new_shape = new_shape[:-1]
 
-        mask = skimage.transform.resize(image.mask, new_shape, order=0, mode="constant")
+        mask = transform.resize(image.mask, new_shape, order=0, mode="constant")
 
-        mask = skimage.img_as_bool(mask)
+        mask = util.img_as_bool(mask)
 
         if image.has_crop_mask:
-            cropping = skimage.transform.resize(
+            cropping = transform.resize(
                 image.crop_mask, new_shape, order=0, mode="constant"
             )
 
-            cropping = skimage.img_as_bool(cropping)
+            cropping = util.img_as_bool(cropping)
         else:
             cropping = None
 

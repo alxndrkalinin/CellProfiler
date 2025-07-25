@@ -4,7 +4,8 @@ Shared mophology methods used by multiple modules
 
 import numpy
 import scipy.ndimage
-import skimage.morphology
+
+from cubic.skimage import morphology
 
 
 def dilation(x_data, structuring_element):
@@ -17,7 +18,7 @@ def dilation(x_data, structuring_element):
 
         for index, plane in enumerate(x_data):
 
-            y_data[index] = skimage.morphology.dilation(plane, structuring_element)
+            y_data[index] = morphology.dilation(plane, structuring_element)
 
         return y_data
 
@@ -26,7 +27,7 @@ def dilation(x_data, structuring_element):
             "A 3D structuring element cannot be applied to a 2D image."
         )
 
-    y_data = skimage.morphology.dilation(x_data, structuring_element)
+    y_data = morphology.dilation(x_data, structuring_element)
 
     return y_data
 
@@ -41,7 +42,7 @@ def erosion(x_data, structuring_element):
 
         for index, plane in enumerate(x_data):
 
-            y_data[index] = skimage.morphology.erosion(plane, structuring_element)
+            y_data[index] = morphology.erosion(plane, structuring_element)
 
         return y_data
 
@@ -50,7 +51,7 @@ def erosion(x_data, structuring_element):
             "A 3D structuring element cannot be applied to a 2D image."
         )
 
-    y_data = skimage.morphology.erosion(x_data, structuring_element)
+    y_data = morphology.erosion(x_data, structuring_element)
 
     return y_data
 
@@ -65,7 +66,7 @@ def binary_erosion(x_data, structuring_element):
 
         for index, plane in enumerate(x_data):
 
-            y_data[index] = skimage.morphology.binary_erosion(
+            y_data[index] = morphology.binary_erosion(
                 plane, structuring_element
             )
 
@@ -76,7 +77,7 @@ def binary_erosion(x_data, structuring_element):
             "A 3D structuring element cannot be applied to a 2D image."
         )
 
-    y_data = skimage.morphology.binary_erosion(x_data, structuring_element)
+    y_data = morphology.binary_erosion(x_data, structuring_element)
 
     return y_data
 

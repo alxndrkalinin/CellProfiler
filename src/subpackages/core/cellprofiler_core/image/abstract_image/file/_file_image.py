@@ -8,8 +8,7 @@ import urllib.request
 import weakref
 
 import numpy
-from skimage.exposure import rescale_intensity
-from skimage.util import img_as_float32
+from cubic.skimage import exposure, util
 
 import cellprofiler_core.preferences
 from .._abstract_image import AbstractImage
@@ -144,7 +143,7 @@ class FileImage(AbstractImage):
         # rescale_intensity do it *anyway* (it does np.clip, w/ min/max values
         # set to float64, causing the img to become float64) so we don't
         # incur *extra* inefficiencies on top of what skimage is already doing
-        data = rescale_intensity(data, in_range="dtype", out_range="float64").astype("float32")
+        data = exposure.rescale_intensity(data, in_range="dtype", out_range="float64").astype("float32")
         if wants_inscale:
             return data, scale
         return data
@@ -152,7 +151,7 @@ class FileImage(AbstractImage):
     @staticmethod
     def __int_to_float32(data, wants_inscale=False):
         scale = float(2**(8*data.dtype.itemsize) - 1)
-        data = rescale_intensity(data, in_range="dtype", out_range=(0., 1.)).astype("float32")
+        data = exposure.rescale_intensity(data, in_range="dtype", out_range=(0., 1.)).astype("float32")
         if wants_inscale:
             return data, scale
         return data
@@ -162,7 +161,7 @@ class FileImage(AbstractImage):
         # data is normalized float, just cast to 32 bit
         if data.min() >= 0 and data.max() <= 1:
             scale = 1.0
-            data = img_as_float32(data)
+            data = util.img_as_float32(data)
         # data is normalized float, but not in [0, 1]
         # adjust and cast to 32 bit
         elif data.min() >= -1 and data.max() <= 1:
@@ -170,7 +169,7 @@ class FileImage(AbstractImage):
             # a bit nasty to cast to 64,
             # but it buys us some extra precision until final cast to 32
             data = (data.astype("float64") + 1) / 2.
-            data = img_as_float32(data)
+            data = util.img_as_float32(data)
         # data is unnormalized, with non-negative values
         # treat as uint of the same bitdepth and normalize
         elif data.min() >= 0:
@@ -234,7 +233,7 @@ class FileImage(AbstractImage):
             if in_range != NO_RESCALE:
                 scale = float(in_range[1] - in_range[0])
                 # see notes above about casting to float64
-                data = rescale_intensity(data.astype("float64"), in_range=in_range, out_range=(0., 1.)).astype("float32")
+                data = exposure.rescale_intensity(data.astype("float64"), in_range=in_range, out_range=(0., 1.)).astype("float32")
         elif numpy.issubdtype(data.dtype, numpy.floating):
             data, scale = FileImage.__float_to_float32(data, wants_inscale=True)
         elif numpy.issubdtype(data.dtype, numpy.signedinteger):

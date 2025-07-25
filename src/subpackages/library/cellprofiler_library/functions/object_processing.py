@@ -3,8 +3,9 @@ from typing import Literal
 import centrosome.cpmorphology
 import numpy
 import scipy.ndimage
-import skimage.morphology
 import mahotas
+
+from cubic.skimage import feature, filters, measure, morphology, segmentation, transform
 
 
 def shrink_to_point(labels, fill):
@@ -271,7 +272,7 @@ def watershed(
             return watershed_image
 
     # Create and check structuring element for seed dilation
-    strel = getattr(skimage.morphology, structuring_element.casefold())(
+    strel = getattr(morphology, structuring_element.casefold())(
         structuring_element_size
     )
 
@@ -295,23 +296,23 @@ def watershed(
         else:
             factors = (downsample, downsample)
 
-        input_image = skimage.transform.downscale_local_mean(input_image, factors)
+        input_image = transform.downscale_local_mean(input_image, factors)
         # Resize optional images
         if intensity_image is not None:
-            intensity_image = skimage.transform.downscale_local_mean(
+            intensity_image = transform.downscale_local_mean(
                 intensity_image, factors
             )
         if markers_image is not None:
-            markers_image = skimage.transform.downscale_local_mean(
+            markers_image = transform.downscale_local_mean(
                 markers_image, factors
             )
         if mask is not None:
-            mask = skimage.transform.downscale_local_mean(mask, factors)
+            mask = transform.downscale_local_mean(mask, factors)
 
     # Only calculate the distance transform if required for shape-based declumping
     # or distance-based seed generation
     if declump_method.casefold() == "shape" or watershed_method.casefold() == "distance":
-        smoothed_input_image = skimage.filters.gaussian(
+        smoothed_input_image = filters.gaussian(
             input_image, sigma=gaussian_sigma
         )
         # Calculate distance transform
@@ -340,7 +341,7 @@ def watershed(
     elif watershed_method.casefold() == "markers":
         # The user has provided their own seeds/markers
         seeds = markers_image
-        seeds = skimage.morphology.binary_dilation(seeds, strel)
+        seeds = morphology.binary_dilation(seeds, strel)
     else:
         raise NotImplementedError(
             f"watershed method {watershed_method} is not supported"
@@ -349,7 +350,7 @@ def watershed(
     if not watershed_method.casefold() == "markers":
         # Generate seeds
         if seed_method.casefold() == "local":
-            seed_coords = skimage.feature.peak_local_max(
+            seed_coords = feature.peak_local_max(
                 seed_image,
                 min_distance=min_distance,
                 threshold_rel=min_intensity,
@@ -359,12 +360,12 @@ def watershed(
             )
             seeds = numpy.zeros(seed_image.shape, dtype=bool)
             seeds[tuple(seed_coords.T)] = True
-            seeds = skimage.morphology.binary_dilation(seeds, strel)
+            seeds = morphology.binary_dilation(seeds, strel)
             seeds = scipy.ndimage.label(seeds)[0]
 
         elif seed_method.casefold() == "regional":
             seeds = mahotas.regmax(seed_image, maxima_footprint)
-            seeds = skimage.morphology.binary_dilation(seeds, strel)
+            seeds = morphology.binary_dilation(seeds, strel)
             seeds = scipy.ndimage.label(seeds)[0]
         else:
             raise NotImplementedError(
@@ -372,7 +373,7 @@ def watershed(
             )
 
     # Run watershed
-    watershed_image = skimage.segmentation.watershed(
+    watershed_image = segmentation.watershed(
         watershed_input_image,
         markers=seeds,
         mask=mask if mask is not None else input_image != 0,
@@ -383,18 +384,18 @@ def watershed(
 
     # Reverse downsampling
     if downsample > 1:
-        watershed_image = skimage.transform.resize(
+        watershed_image = transform.resize(
             watershed_image, input_shape, mode="edge", order=0, preserve_range=True
         )
         watershed_image = numpy.rint(watershed_image).astype(numpy.uint16)
 
     if exclude_border:
-        watershed_image = skimage.segmentation.clear_border(watershed_image)
+        watershed_image = segmentation.clear_border(watershed_image)
 
     if return_seeds:
         # Reverse seed downsampling
         if downsample > 1:
-            seeds = skimage.transform.resize(
+            seeds = transform.resize(
                 seeds, input_shape, mode="edge", order=0, preserve_range=True
             )
             seeds = numpy.rint(seeds).astype(numpy.uint16)
@@ -422,7 +423,7 @@ def fill_object_holes(labels, diameter, planewise=False):
             for obj in numpy.unique(plane):
                 if obj == 0:
                     continue
-                filled_mask = skimage.morphology.remove_small_holes(
+                filled_mask = morphology.remove_small_holes(
                     plane == obj, min_obj_size
                 )
                 plane[filled_mask] = obj
@@ -431,14 +432,14 @@ def fill_object_holes(labels, diameter, planewise=False):
         for obj in numpy.unique(array):
             if obj == 0:
                 continue
-            filled_mask = skimage.morphology.remove_small_holes(
+            filled_mask = morphology.remove_small_holes(
                 array == obj, min_obj_size
             )
             array[filled_mask] = obj
     return array
 
 def fill_convex_hulls(labels):
-    data = skimage.measure.regionprops(labels)
+    data = measure.regionprops(labels)
     output = numpy.zeros_like(labels)
     for prop in data:
         label = prop["label"]

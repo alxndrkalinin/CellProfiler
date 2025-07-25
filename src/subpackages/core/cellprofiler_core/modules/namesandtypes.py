@@ -8,7 +8,7 @@ import zlib
 from collections import Counter
 
 import numpy
-import skimage.morphology
+from cubic.skimage import morphology
 
 from ..constants.image import C_FRAME, CT_COLOR, CT_GRAYSCALE, CT_FUNCTION, CT_MASK, CT_OBJECTS
 from ..constants.image import C_HEIGHT
@@ -1616,7 +1616,7 @@ requests an object selection.
         image = provider.provide_image(workspace.image_set)
         o = Objects()
         shape = image.pixel_data.shape
-        #image.set_image(skimage.morphology.label(image.pixel_data), convert=False)
+        #image.set_image(morphology.label(image.pixel_data), convert=False)
         #renumber if non-continuous label matrix: 
         labels=image.pixel_data
         nobjects = numpy.max(labels)
@@ -1627,7 +1627,7 @@ requests an object selection.
         else:
             indexer = numpy.zeros(nobjects + 1, int)
             indexer[unique_labels] =contig_labels
-            image.set_image(skimage.morphology.label(indexer[labels]), convert=False)
+            image.set_image(morphology.label(indexer[labels]), convert=False)
         if shape[2] == 1:
             o.segmented = image.pixel_data[:, :, 0]
             add_object_location_measurements(

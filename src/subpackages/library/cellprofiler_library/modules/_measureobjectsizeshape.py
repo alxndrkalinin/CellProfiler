@@ -1,7 +1,5 @@
 from typing import Tuple
 import numpy
-import skimage
-import scipy
 
 import centrosome
 import centrosome.zernike

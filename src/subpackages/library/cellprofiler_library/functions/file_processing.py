@@ -3,6 +3,9 @@ import os
 import numpy
 import skimage
 
+from cubic.skimage import io, measure, util
+
+
 def save_object_image_crops(
     input_image,
     input_objects,
@@ -53,28 +56,28 @@ def save_object_image_crops(
         label_save_filename = os.path.join(save_path, save_filename + f"{label}.{file_extension}")
         save_filenames.append(label_save_filename)
         mask_in = labels == label
-        properties = skimage.measure.regionprops(
+        properties = measure.regionprops(
                 mask_in.astype(int), intensity_image=input_image
             )
         mask = properties[0].intensity_image
         
         if file_format.casefold() == "png":
-            skimage.io.imsave(
+            io.imsave(
                 label_save_filename,
-                skimage.img_as_ubyte(mask),
+                util.img_as_ubyte(mask),
                 check_contrast=False
             )
         elif file_format.casefold() == "tiff8":
-            skimage.io.imsave(
+            io.imsave(
                 label_save_filename,
-                skimage.img_as_ubyte(mask),
+                util.img_as_ubyte(mask),
                 compression=(8,6),
                 check_contrast=False,
             )
         elif file_format.casefold() == "tiff16":
-            skimage.io.imsave(
+            io.imsave(
                 label_save_filename,
-                skimage.img_as_uint(mask),
+                util.img_as_uint(mask),
                 compression=(8,6),
                 check_contrast=False,
             )
@@ -129,22 +132,22 @@ def save_object_masks(
         mask = labels == label
         
         if file_format.casefold() == "png":
-                skimage.io.imsave(
+                io.imsave(
                     label_save_filename, 
-                    skimage.img_as_ubyte(mask), 
+                    util.img_as_ubyte(mask), 
                     check_contrast=False
                 )
         elif file_format.casefold() == "tiff8":
-            skimage.io.imsave(
+            io.imsave(
                 label_save_filename,
-                skimage.img_as_ubyte(mask),
+                util.img_as_ubyte(mask),
                 compression=(8, 6),
                 check_contrast=False,
             )
         elif file_format.casefold() == "tiff16":
-            skimage.io.imsave(
+            io.imsave(
                 label_save_filename,
-                skimage.img_as_uint(mask),
+                util.img_as_uint(mask),
                 compression=(8, 6),
                 check_contrast=False,
             )

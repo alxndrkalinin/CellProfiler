@@ -1,18 +1,18 @@
 import numpy
-import skimage.color
-import skimage.morphology
 import centrosome
 import centrosome.threshold
 import scipy
 import matplotlib
 
+from cubic.skimage import color, filters, morphology, restoration
+
 
 def rgb_to_greyscale(image):
     if image.shape[-1] == 4:
-        output = skimage.color.rgba2rgb(image)
-        return skimage.color.rgb2gray(output)
+        output = color.rgba2rgb(image)
+        return color.rgb2gray(output)
     else:
-        return skimage.color.rgb2gray(image)
+        return color.rgb2gray(image)
 
 
 def medial_axis(image):
@@ -20,7 +20,7 @@ def medial_axis(image):
         raise ValueError("Convert image to grayscale or use medialaxis module")
     if image.ndim > 2 and image.shape[-1] not in (3, 4):
         raise ValueError("Process 3D images plane-wise or use the medialaxis module")
-    return skimage.morphology.medial_axis(image)
+    return morphology.medial_axis(image)
 
 
 def enhance_edges_sobel(image, mask=None, direction="all"):
@@ -79,7 +79,7 @@ def enhance_edges_canny(
     return output_pixels
 
 
-def morphology_closing(image, structuring_element=skimage.morphology.disk(1)):
+def morphology_closing(image, structuring_element=morphology.disk(1)):
     if structuring_element.ndim == 3 and image.ndim == 2:
         raise ValueError("Cannot apply a 3D structuring element to a 2D image")
     # Check if a 2D structuring element will be applied to a 3D image planewise
@@ -87,13 +87,13 @@ def morphology_closing(image, structuring_element=skimage.morphology.disk(1)):
     if planewise:
         output = numpy.zeros_like(image)
         for index, plane in enumerate(image):
-            output[index] = skimage.morphology.closing(plane, structuring_element)
+            output[index] = morphology.closing(plane, structuring_element)
         return output
     else:
-        return skimage.morphology.closing(image, structuring_element)
+        return morphology.closing(image, structuring_element)
 
 
-def morphology_opening(image, structuring_element=skimage.morphology.disk(1)):
+def morphology_opening(image, structuring_element=morphology.disk(1)):
     if structuring_element.ndim == 3 and image.ndim == 2:
         raise ValueError("Cannot apply a 3D structuring element to a 2D image")
     # Check if a 2D structuring element will be applied to a 3D image planewise
@@ -101,18 +101,18 @@ def morphology_opening(image, structuring_element=skimage.morphology.disk(1)):
     if planewise:
         output = numpy.zeros_like(image)
         for index, plane in enumerate(image):
-            output[index] = skimage.morphology.opening(plane, structuring_element)
+            output[index] = morphology.opening(plane, structuring_element)
         return output
     else:
-        return skimage.morphology.opening(image, structuring_element)
+        return morphology.opening(image, structuring_element)
 
 
 def morphological_skeleton_2d(image):
-    return skimage.morphology.skeletonize(image)
+    return morphology.skeletonize(image)
 
 
 def morphological_skeleton_3d(image):
-    return skimage.morphology.skeletonize_3d(image)
+    return morphology.skeletonize_3d(image)
 
 
 def median_filter(image, window_size, mode):
@@ -120,7 +120,7 @@ def median_filter(image, window_size, mode):
 
 
 def reduce_noise(image, patch_size, patch_distance, cutoff_distance, channel_axis=None):
-    denoised = skimage.restoration.denoise_nl_means(
+    denoised = restoration.denoise_nl_means(
         image=image,
         patch_size=patch_size,
         patch_distance=patch_distance,
@@ -252,15 +252,15 @@ def get_adaptive_threshold(
         thresh_out = numpy.full_like(image, image.ravel()[0])
     # Define the threshold method to be run in each adaptive window
     elif threshold_method.casefold() == "otsu":
-        threshold_fn = skimage.filters.threshold_otsu
+        threshold_fn = filters.threshold_otsu
     elif threshold_method.casefold() == "multiotsu":
-        threshold_fn = skimage.filters.threshold_multiotsu
+        threshold_fn = filters.threshold_multiotsu
         # If nbins not set in kwargs, use default 128
         kwargs["nbins"] = kwargs["nbins"] if "nbins" in kwargs else 128
     elif threshold_method.casefold() == "minimum_cross_entropy":
         tol = max(numpy.min(numpy.diff(numpy.unique(image))) / 2, 0.5 / 65536)
         kwargs["tolerance"] = tol
-        threshold_fn = skimage.filters.threshold_li
+        threshold_fn = filters.threshold_li
     elif threshold_method.casefold() == "robust_background":
         threshold_fn = get_threshold_robust_background
         kwargs["lower_outlier_fraction"] = (
@@ -287,7 +287,7 @@ def get_adaptive_threshold(
     elif threshold_method.casefold() == "sauvola":
         if window_size % 2 == 0:
             window_size += 1
-        thresh_out = skimage.filters.threshold_sauvola(image, window_size)
+        thresh_out = filters.threshold_sauvola(image, window_size)
     else:
         raise NotImplementedError(f"Threshold method {threshold_method} not supported.")
 
@@ -332,7 +332,7 @@ def get_adaptive_threshold(
                 elif threshold_method == "multiotsu" and len(numpy.unique(block)) < 3:
                     # Region within window has only 2 values.
                     # Can't run 3-class otsu on only 2 values.
-                    threshold_out = skimage.filters.threshold_otsu(block)
+                    threshold_out = filters.threshold_otsu(block)
                 else:
                     try:
                         threshold_out = threshold_fn(block, **kwargs)
@@ -433,15 +433,15 @@ def get_global_threshold(
 
     elif threshold_method.casefold() in ("minimum_cross_entropy", "sauvola"):
         tol = max(numpy.min(numpy.diff(numpy.unique(image))) / 2, 0.5 / 65536)
-        threshold = skimage.filters.threshold_li(image, tolerance=tol)
+        threshold = filters.threshold_li(image, tolerance=tol)
     elif threshold_method.casefold() == "robust_background":
         threshold = get_threshold_robust_background(image, **kwargs)
     elif threshold_method.casefold() == "otsu":
-        threshold = skimage.filters.threshold_otsu(image)
+        threshold = filters.threshold_otsu(image)
     elif threshold_method.casefold() == "multiotsu":
         bin_wanted = 0 if assign_middle_to_foreground.casefold() == "foreground" else 1
         kwargs["nbins"] = kwargs["nbins"] if "nbins" in kwargs else 128
-        threshold = skimage.filters.threshold_multiotsu(image, **kwargs)
+        threshold = filters.threshold_multiotsu(image, **kwargs)
         threshold = threshold[bin_wanted]
     else:
         raise NotImplementedError(f"Threshold method {threshold_method} not supported.")
@@ -500,7 +500,7 @@ def overlay_objects(image, labels, opacity=0.3, max_label=None, seed=None, color
             if unique_labels[0] == 0:
                 unique_labels = unique_labels[1:]
 
-            overlay[index] = skimage.color.label2rgb(
+            overlay[index] = color.label2rgb(
                 labels[index],
                 alpha=opacity,
                 bg_color=[0, 0, 0],
@@ -511,7 +511,7 @@ def overlay_objects(image, labels, opacity=0.3, max_label=None, seed=None, color
 
         return overlay
 
-    return skimage.color.label2rgb(
+    return color.label2rgb(
         labels,
         alpha=opacity,
         bg_color=[0, 0, 0],
@@ -534,5 +534,5 @@ def gaussian_filter(image, sigma):
         channel_axis = -1
     else:
         channel_axis = None
-    y_data = skimage.filters.gaussian(image, sigma=sigma, channel_axis=channel_axis)
+    y_data = filters.gaussian(image, sigma=sigma, channel_axis=channel_axis)
     return y_data

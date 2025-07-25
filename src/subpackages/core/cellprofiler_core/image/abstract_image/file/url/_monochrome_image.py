@@ -1,4 +1,4 @@
-import skimage.color
+import cubic.skimage import color
 
 from ._url_image import URLImage
 
@@ -39,6 +39,6 @@ class MonochromeImage(URLImage):
         image = URLImage.provide_image(self, image_set)
 
         if image.pixel_data.ndim == image.dimensions + 1:
-            image.pixel_data = skimage.color.rgb2gray(image.pixel_data)
+            image.pixel_data = color.rgb2gray(image.pixel_data)
 
         return image

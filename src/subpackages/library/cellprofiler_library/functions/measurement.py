@@ -8,7 +8,7 @@ import centrosome.fastemd
 from sklearn.cluster import KMeans
 from typing import Tuple
 import numpy
-import skimage
+from cubic.skimage import measure
 
 from cellprofiler_library.opts import measureimageoverlap as mio
 from cellprofiler_library.functions.segmentation import convert_labels_to_ijv
@@ -478,7 +478,7 @@ def measure_object_size_shape(
 
     if len(labels.shape) == 2:
         # 2D
-        props = skimage.measure.regionprops_table(labels, properties=desired_properties)
+        props = measure.regionprops_table(labels, properties=desired_properties)
 
         formfactor = 4.0 * numpy.pi * props["area"] / props["perimeter"] ** 2
         denom = [max(x, 1) for x in 4.0 * numpy.pi * props["area"]]
@@ -628,7 +628,7 @@ def measure_object_size_shape(
 
     else:
         # 3D
-        props = skimage.measure.regionprops_table(labels, properties=desired_properties)
+        props = measure.regionprops_table(labels, properties=desired_properties)
         # SurfaceArea
         surface_areas = numpy.zeros(len(props["label"]))
         for index, label in enumerate(props["label"]):
@@ -646,13 +646,13 @@ def measure_object_size_shape(
                 ),
             ]
             volume = volume == label
-            verts, faces, _normals, _values = skimage.measure.marching_cubes(
+            verts, faces, _normals, _values = measure.marching_cubes(
                 volume,
                 method="lewiner",
                 spacing=spacing,
                 level=0,
             )
-            surface_areas[index] = skimage.measure.mesh_surface_area(verts, faces)
+            surface_areas[index] = measure.mesh_surface_area(verts, faces)
 
         features_to_record = {
             ObjectSizeShapeFeatures.F_VOLUME.value: props["area"],

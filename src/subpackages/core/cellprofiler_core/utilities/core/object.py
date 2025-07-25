@@ -1,6 +1,6 @@
 import matplotlib.cm
 import numpy
-import skimage.color
+from cubic.skimage import color
 
 from ...preferences import get_default_colormap
 
@@ -91,7 +91,7 @@ def overlay_labels(pixel_data, labels, opacity=0.7, max_label=None, seed=None):
             if unique_labels[0] == 0:
                 unique_labels = unique_labels[1:]
 
-            overlay[index] = skimage.color.label2rgb(
+            overlay[index] = color.label2rgb(
                 labels[index],
                 alpha=opacity,
                 bg_color=[0, 0, 0],
@@ -102,7 +102,7 @@ def overlay_labels(pixel_data, labels, opacity=0.7, max_label=None, seed=None):
 
         return overlay
 
-    return skimage.color.label2rgb(
+    return color.label2rgb(
         labels,
         alpha=opacity,
         bg_color=[0, 0, 0],

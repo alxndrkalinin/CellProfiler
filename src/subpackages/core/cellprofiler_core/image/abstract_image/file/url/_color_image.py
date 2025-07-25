@@ -1,4 +1,4 @@
-import skimage.color
+from cubic.skimage import color
 
 from ._url_image import URLImage
 
@@ -27,6 +27,6 @@ class ColorImage(URLImage):
         image = URLImage.provide_image(self, image_set)
 
         if image.pixel_data.ndim == image.dimensions:
-            image.pixel_data = skimage.color.gray2rgb(image.pixel_data)
+            image.pixel_data = color.gray2rgb(image.pixel_data)
 
         return image

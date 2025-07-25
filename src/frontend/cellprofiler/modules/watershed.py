@@ -1,4 +1,4 @@
-import skimage
+from cubic.skimage import color, segmentation
 
 import cellprofiler_core.object
 from cellprofiler_core.module.image_segmentation import ImageSegmentation
@@ -463,7 +463,7 @@ require volumetric structuring elements.
             markers_data = markers.pixel_data
 
             if markers.multichannel:
-                markers_data = skimage.color.rgb2gray(markers_data)
+                markers_data = color.rgb2gray(markers_data)
 
         if not self.mask_name.is_blank:
             mask_name = self.mask_name.value
@@ -475,7 +475,7 @@ require volumetric structuring elements.
             intensity_image = images.get_image(self.intensity_name.value)
             intensity_data = intensity_image.pixel_data
             if intensity_image.multichannel:
-                    intensity_data = skimage.color.rgb2gray(intensity_data)
+                    intensity_data = color.rgb2gray(intensity_data)
 
         y_data, seeds = watershed(
                 input_image=x_data,
@@ -528,7 +528,7 @@ require volumetric structuring elements.
             # If declumping is None then maxima are not calculated
             if self.display_maxima and not self.declump_method == O_NONE:
                 # Find object boundaries and combine with seeds
-                object_outlines = skimage.segmentation.find_boundaries(y_data, mode="inner")
+                object_outlines = segmentation.find_boundaries(y_data, mode="inner")
                 outlines_and_seeds = seeds + object_outlines
                 # Colour the boundaries based on the object label from y_data and mask out background
                 workspace.display_data.outlines_and_seeds = (outlines_and_seeds > 0) * y_data

@@ -1,4 +1,4 @@
-import skimage.morphology
+from cubic.skimage import morphology
 
 from ._setting import Setting
 from ._validation_error import ValidationError
@@ -22,7 +22,7 @@ class StructuringElement(Setting):
         return ["Ball", "Cube", "Diamond", "Disk", "Octahedron", "Square", "Star"]
 
     def get_value(self):
-        return getattr(skimage.morphology, self.shape)(self.size)
+        return getattr(morphology, self.shape)(self.size)
 
     def set_value(self, value):
         self.value_text = value
